@@ -1,17 +1,12 @@
 def beethoven(notes, moves, start):
-    start = int(start) % len(notes)
-
-    final_song = []
-
+    song_list = notes[:]
+    result = [song_list[start]]
     for index in moves:
-        index = int(index)
-        start = (start + index) % len(notes)
-        final_song.append(notes[start])
+        start += index
+        if start > len(song_list) - 1:
+            start = start % len(song_list)
+        result.append(song_list[start])
+    return result
 
-    return final_song
 
-
-notes_input = input().split()
-moves_input = input().split()
-start_input = input()
-print(beethoven(notes_input, moves_input, start_input))
+print(beethoven(["do", "re", "mi", "fa", "sol"], [1, -3, 4, 2], 2))

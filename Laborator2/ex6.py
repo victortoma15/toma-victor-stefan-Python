@@ -1,4 +1,4 @@
-def find_elements_appearing_x_times (x, *lists):
+def element_finder (x, *lists):
     element_count = {}
 
     for input_list in lists:
@@ -19,5 +19,5 @@ list3 = [4, 5, 6]
 list4 = [4, 1, "test"]
 x_input = 2
 
-result = find_elements_appearing_x_times(x_input, list1, list2, list3, list4)
-print(result)
+result_output = element_finder(x_input, list1, list2, list3, list4)
+print(result_output)
