@@ -228,6 +228,13 @@ class TrapTheMouse:
             for hex_cell in row:
                 hex_cell.render()
 
+    def clear_and_setup_board (self) -> None:
+        """
+        Clears the game board and sets it up again for a new game.
+        """
+        self.board = []
+        self.setup_game_board()
+
     def find_available_moves (self) -> list:
         """
         Finds the available moves for the mouse.
@@ -395,7 +402,6 @@ class TrapTheMouse:
         update_screen = False
         game_difficulty = 'easy'
         current_player = 1
-        victory_message = 'Game in progress'
 
         while True:
             for event in pg.event.get():
@@ -426,3 +432,125 @@ class TrapTheMouse:
 
             pg.display.update()
             game_clock.tick(60)
+
+    def handle_events (self, event, game_state, game_difficulty, current_player):
+        """
+        Handles events based on the game state.
+        """
+        if game_state == 'menu':
+            if self.quit_button.rect.collidepoint(event.pos):
+                exit()
+            elif self.start_button.rect.collidepoint(event.pos):
+                return 'difficulty_selection', True, game_difficulty, current_player
+
+        elif game_state == 'difficulty_selection':
+            if self.easy_button.rect.collidepoint(event.pos):
+                return 'playing', True, 'easy', 1
+            elif self.medium_button.rect.collidepoint(event.pos):
+                return 'playing', True, 'medium', 1
+            elif self.hard_button.rect.collidepoint(event.pos):
+                return 'playing', True, 'hard', 1
+            elif self.pvp_button.rect.collidepoint(event.pos):
+                self.pvp_mode = True
+                return 'playing', True, 'pvp', 1
+
+        elif game_state == 'playing':
+            hex_found = False
+
+            for i, row in enumerate(self.board):
+                for j, hex_cell in enumerate(row):
+                    if hex_cell.rect.collidepoint(event.pos):
+                        if self.pvp_mode:
+                            if self.current_player == 1 and hex_cell.hex_type == 0:
+                                hex_cell.update_type(3, self.block_hex)
+                                hex_found = True
+                            elif self.current_player == 2 and (
+                                    hex_cell.hex_type == 0 or hex_cell.hex_type == 1) and self.is_adjacent(i, j):
+                                self.update_mouse_position((i, j))
+                                hex_found = True
+                                if hex_cell.hex_type == 1:
+                                    self.game_state = 'game_over'
+                                    self.victory_message = "Victory! The mouse player has reached the edge!"
+                                    return game_state, True, game_difficulty, current_player
+                        else:
+                            if hex_cell.hex_type == 0:
+                                hex_cell.update_type(3, self.block_hex)
+                                hex_found = True
+                        break
+                if hex_found:
+                    break
+            if not self.find_available_moves():
+                self.game_state = 'game_over'
+                self.victory_message = "Victory! The mouse player has been trapped!"
+                return game_state, True, game_difficulty, current_player
+            if hex_found:
+                if self.pvp_mode:
+                    self.current_player = 1 if self.current_player == 2 else 2
+                else:
+                    available_moves = self.find_available_moves()
+                    if game_difficulty == 'easy':
+                        self.move_mouse_easy_mode(available_moves)
+                    elif game_difficulty == 'medium':
+                        self.move_mouse_medium_mode(available_moves)
+                    elif game_difficulty == 'hard':
+                        self.move_mouse_difficult_mode()
+
+            if not self.find_available_moves():
+                if self.is_mouse_victorious():
+                    return 'game_over', True, game_difficulty, current_player
+                else:
+                    return 'win_screen', True, game_difficulty, current_player
+
+        elif game_state == 'win_screen':
+            if self.back_button.rect.collidepoint(event.pos):
+                self.reset_game()
+                return 'menu', True, game_difficulty, current_player
+
+        elif game_state == 'game_over':
+            if self.back_button.rect.collidepoint(event.pos):
+                self.reset_game()
+                return 'menu', True, game_difficulty, current_player
+
+        return game_state, False, game_difficulty, current_player
+
+    def update_game_screen (self, game_state):
+        """
+        Updates the game screen based on the current state.
+        """
+        if game_state == 'menu':
+            self.render_main_menu()
+        elif game_state == 'difficulty_selection':
+            self.render_difficulty_screen()
+        elif game_state == 'playing':
+            self.render_game_board()
+        elif game_state == 'game_over':
+            self.render_game_over_screen("Defeat! The mouse escaped!")
+        elif game_state == 'win_screen':
+            self.render_victory_screen("Victory! You trapped the mouse!")
+
+    def reset_game (self):
+        """
+        Resets the game state.
+        """
+        self.clear_and_setup_board()
+        self.game_state = 'menu'
+        self.victory = None
+
+    def render_game_over_screen (self, message):
+        """
+        Renders the game over screen with the provided message.
+        """
+        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_img, (10, 10))
+
+        font = pg.font.Font(None, 70)
+        message_surface = font.render(message, True, self.text_color)
+        message_position = message_surface.get_rect(centerx=self.screen.get_width() // 2,
+                                                    centery=self.screen.get_height() // 2)
+        self.screen.blit(message_surface, message_position)
+        self.back_button.render()
+
+
+if __name__ == '__main__':
+    game_instance = TrapTheMouse()
+    game_instance.run_game_loop()
