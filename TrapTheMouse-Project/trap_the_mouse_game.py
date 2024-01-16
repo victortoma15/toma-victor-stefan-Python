@@ -292,6 +292,9 @@ class TrapTheMouse:
         self.board[new_row][new_col].update_type(2, self.mouse_hex)
 
     def bfs_pathfinding (self, matrix: list, start: tuple) -> tuple:
+        """
+        Finds the shortest path to the edge using the BFS algorithm.
+        """
         queue = deque([start])
         visited = {start}
 
@@ -309,6 +312,9 @@ class TrapTheMouse:
         return start
 
     def move_mouse_difficult_mode (self) -> None:
+        """
+        Moves the mouse in a difficult mode, using the BFS algorithm to find the shortest path to the edge.
+        """
         board_state = [''.join([str(hex_cell.hex_type) for hex_cell in row]) for row in self.board]
         new_position = self.bfs_pathfinding(board_state, tuple(self.mouse))
 
@@ -318,6 +324,9 @@ class TrapTheMouse:
             self.try_alternative_move()
 
     def try_alternative_move (self):
+        """
+        Tries to move the mouse in a random direction if the BFS algorithm fails to find a path.
+        """
         available_moves = self.find_available_moves()
         if not available_moves:
             self.game_state = 'win_screen'
@@ -343,6 +352,9 @@ class TrapTheMouse:
         return abs(row - x) <= 1 and abs(col - y) <= 1
 
     def update_mouse_position (self, new_position: tuple) -> None:
+        """
+        Updates the position of the mouse.
+        """
         old_x, old_y = self.mouse
         new_x, new_y = new_position
 
@@ -372,3 +384,45 @@ class TrapTheMouse:
                                                     centery=self.screen.get_height() // 2)
         self.screen.blit(message_surface, message_position)
         self.back_button.render()
+
+    def run_game_loop (self) -> None:
+        """
+        Runs the main game loop with modified structure and logic.
+        """
+        self.render_main_menu()
+        game_clock = pg.time.Clock()
+        game_state = 'menu'
+        update_screen = False
+        game_difficulty = 'easy'
+        current_player = 1
+        victory_message = 'Game in progress'
+
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    game_state, update_screen, game_difficulty, current_player = self.handle_events(
+                        event, game_state, game_difficulty, current_player)
+
+            available_moves = self.find_available_moves()
+            if not available_moves:
+                if self.is_mouse_victorious():
+                    game_state = 'game_over'
+                else:
+                    game_state = 'win_screen'
+                update_screen = True
+            if game_state == 'playing':
+                row, col = self.mouse
+                if row == 0 or row == len(self.board) - 1 or col == 0 or col == len(self.board[0]) - 1:
+                    game_state = 'game_over'
+                    update_screen = True
+                elif not self.find_available_moves():
+                    if self.is_mouse_victorious():
+                        game_state = 'game_over'
+            if update_screen:
+                self.update_game_screen(game_state)
+                update_screen = False
+
+            pg.display.update()
+            game_clock.tick(60)
