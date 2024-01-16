@@ -66,7 +66,7 @@ class GameButton:
 
 def spawn_blocks (matrix: list, count: int) -> list:
     """
-    Places a specified number of obstacles randomly on the board.
+    Places a specified number of blocks randomly on the board.
     """
     for _ in range(count):
         x, y = random.randint(1, 10), random.randint(1, 10)
@@ -75,3 +75,97 @@ def spawn_blocks (matrix: list, count: int) -> list:
         matrix[x][y] = 3
 
     return matrix
+
+
+class TrapTheMouse:
+    def __init__ (self) -> None:
+        """
+        Constructor for the TrapTheMouse class.
+        """
+        self.victory_message = None
+        pg.init()
+        self.setup_colors()
+        self.configure_display()
+        self.create_buttons()
+        self.block_hex = pg.image.load("img/obstacle.png").convert_alpha()
+        self.free_hex = pg.image.load("img/table_hex.png").convert_alpha()
+        self.mouse_hex = pg.image.load("img/mouse.png").convert_alpha()
+        self.exit_hex = pg.image.load("img/obstacle.png").convert_alpha()
+        self.board_size = 13
+        self.setup_game_board()
+        self.background_img = pg.image.load("img/background.png").convert_alpha()
+        self.back_button = GameButton(330, 650, 0.4, pg.image.load("img/menu.png").convert_alpha(), self.screen)
+        self.game_state = 'menu'
+        self.victory = None
+        self.pvp_mode = False
+        self.current_player = 1
+
+    def setup_colors (self) -> None:
+        """
+        Sets up the colors for the game.
+        """
+        self.background_color = (255, 201, 13)
+        self.text_color = (15, 15, 15)
+
+    def configure_display (self) -> None:
+        """
+        Configures the display for the game.
+        """
+        pg.display.set_caption('Trap the Mouse')
+        pg.display.set_caption('Trap the Mouse')
+        self.screen = pg.display.set_mode((900, 900))
+        self.screen.fill(self.background_color)
+        pg.display.update()
+
+    def create_buttons (self) -> None:
+        """
+        Creates the buttons for the game.
+        """
+        self.start_button = GameButton(280, 290, 0.7, pg.image.load("img/play.png").convert_alpha(),
+                                       self.screen)
+        self.quit_button = GameButton(360, 780, 0.3, pg.image.load("img/exit.png").convert_alpha(),
+                                      self.screen)
+        self.easy_button = GameButton(135, 350, 0.8, pg.image.load("img/easy.png").convert_alpha(),
+                                      self.screen)
+        self.medium_button = GameButton(370, 355, 0.8, pg.image.load("img/medium.png").convert_alpha(),
+                                        self.screen)
+        self.hard_button = GameButton(600, 355, 0.8, pg.image.load("img/hard.png").convert_alpha(),
+                                      self.screen)
+        self.pvp_button = GameButton(355, 530, 0.4, pg.image.load("img/pvp.png").convert_alpha(),
+                                     self.screen)
+
+    def setup_game_board (self) -> None:
+        """
+        Sets up the game board with hex cells and initializes their positions.
+        """
+        self.board = []
+        matrix = self.create_initial_matrix()
+
+        for i, row in enumerate(matrix):
+            board_row = [Hexagon(cell_type, i, j) for j, cell_type in enumerate(row)]
+            self.board.append(board_row)
+
+        y_offset = 300
+        for i, row in enumerate(self.board):
+            x_offset = 155 if i % 2 == 0 else 130
+            for hex_cell in row:
+                image = self.determine_image(hex_cell.hex_type)
+                if image is not None:
+                    image = pg.transform.scale(image, (image.get_width() * 1.2, image.get_height() * 1.2))
+                hex_cell.setup_surface((x_offset, y_offset), 5, image, self.screen)
+                x_offset += 38 * 1.2
+            y_offset += 34 * 1.2
+
+    def create_initial_matrix (self) -> list:
+        """
+        Creates the initial matrix for the game board.
+        """
+        size = 13
+        matrix = [[0 for _ in range(size)] for _ in range(size)]
+
+        for i in range(size):
+            matrix[0][i] = matrix[size - 1][i] = matrix[i][0] = matrix[i][size - 1] = 1
+        matrix = spawn_blocks(matrix, 5)
+        matrix[size // 2][size // 2] = 2
+        self.mouse = [size // 2, size // 2]
+        return matrix
