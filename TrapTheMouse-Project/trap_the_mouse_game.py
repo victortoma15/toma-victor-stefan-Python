@@ -290,3 +290,29 @@ class TrapTheMouse:
         new_row, new_col = row + move_row, col + move_col
         self.mouse = [new_row, new_col]
         self.board[new_row][new_col].update_type(2, self.mouse_hex)
+
+    def bfs_pathfinding (self, matrix: list, start: tuple) -> tuple:
+        queue = deque([start])
+        visited = {start}
+
+        while queue:
+            current = queue.popleft()
+            x, y = current
+
+            for dx, dy in [(-1, 0), (-1, -1), (0, -1), (0, 1), (1, 0), (1, -1)]:
+                next_x, next_y = x + dx, y + dy
+                if (0 <= next_x < len(matrix) and 0 <= next_y < len(matrix) and
+                        matrix[next_x][next_y] != '3' and (next_x, next_y) not in visited):
+                    queue.append((next_x, next_y))
+                    visited.add((next_x, next_y))
+
+        return start
+
+    def move_mouse_difficult_mode (self) -> None:
+        board_state = [''.join([str(hex_cell.hex_type) for hex_cell in row]) for row in self.board]
+        new_position = self.bfs_pathfinding(board_state, tuple(self.mouse))
+
+        if new_position != tuple(self.mouse):
+            self.update_mouse_position(new_position)
+        else:
+            self.try_alternative_move()
