@@ -169,3 +169,75 @@ class TrapTheMouse:
         matrix[size // 2][size // 2] = 2
         self.mouse = [size // 2, size // 2]
         return matrix
+
+    def determine_image (self, hex_type: int) -> pg.Surface:
+        """
+        Determines the image to use based on the hex type.
+        """
+        if hex_type == 0:
+            return self.free_hex
+        elif hex_type == 3:
+            return self.block_hex
+        elif hex_type == 2:
+            return self.mouse_hex
+        elif hex_type == 1:
+            return self.exit_hex
+        else:
+            print(f'Unknown hex type: {hex_type}')
+
+        exit()
+
+    def place_obstacles (self, matrix: list, count: int) -> list:
+        """
+        Places obstacles randomly on the board.
+        """
+        for _ in range(count):
+            x, y = random.randint(1, 13), random.randint(1, 13)
+            while matrix[x][y] == 3 or (x == 6 and y == 6):
+                x, y = random.randint(1, 13), random.randint(1, 13)
+            matrix[x][y] = 3
+        return matrix
+
+    def render_main_menu (self) -> None:
+        """
+        Generates the main menu screen.
+        """
+        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_img, (10, 10))
+        self.start_button.render()
+        self.quit_button.render()
+
+    def render_difficulty_screen (self) -> None:
+        """
+        Draws the difficulty selection screen.
+        """
+        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_img, (10, 10))
+        self.easy_button.render()
+        self.medium_button.render()
+        self.hard_button.render()
+        self.pvp_button.render()
+
+    def render_game_board (self) -> None:
+        """
+        Renders the game board.
+        """
+        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_img, (10, 10))
+        for row in self.board:
+            for hex_cell in row:
+                hex_cell.render()
+
+    def find_available_moves (self) -> list:
+        """
+        Finds the available moves for the mouse.
+        """
+        row, col = self.mouse
+        directions = [(row - 1, col), (row - 1, col - 1), (row, col + 1),
+                      (row + 1, col - 1), (row + 1, col), (row, col - 1)]
+        available_moves = []
+        for index, (r, c) in enumerate(directions):
+            if 0 <= r < len(self.board) and 0 <= c < len(self.board[0]):
+                if self.board[r][c].hex_type != 3:
+                    available_moves.append(index + 1)
+        return available_moves
