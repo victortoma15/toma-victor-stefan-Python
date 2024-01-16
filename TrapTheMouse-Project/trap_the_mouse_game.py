@@ -316,3 +316,59 @@ class TrapTheMouse:
             self.update_mouse_position(new_position)
         else:
             self.try_alternative_move()
+
+    def try_alternative_move (self):
+        available_moves = self.find_available_moves()
+        if not available_moves:
+            self.game_state = 'win_screen'
+            return
+
+        move_mapping = {1: (-1, 0), 2: (-1, -1), 3: (0, 1), 4: (1, -1), 5: (1, 0), 6: (0, -1)}
+        shuffled_moves = available_moves[:]
+        random.shuffle(shuffled_moves)
+
+        for move in shuffled_moves:
+            move_row, move_col = move_mapping[move]
+            new_row, new_col = self.mouse[0] + move_row, self.mouse[1] + move_col
+            if 0 <= new_row < self.board_size and 0 <= new_col < self.board_size and self.board[new_row][
+                new_col].hex_type != 3:
+                self.update_mouse_position((new_row, new_col))
+                return
+
+    def is_adjacent (self, x: int, y: int) -> bool:
+        """
+        Checks if the given position is adjacent to the mouse.
+        """
+        row, col = self.mouse
+        return abs(row - x) <= 1 and abs(col - y) <= 1
+
+    def update_mouse_position (self, new_position: tuple) -> None:
+        old_x, old_y = self.mouse
+        new_x, new_y = new_position
+
+        if 0 <= new_x < self.board_size and 0 <= new_y < self.board_size and self.board[new_x][new_y].hex_type != 3:
+            self.board[old_x][old_y].update_type(0, self.free_hex)
+            self.board[new_x][new_y].update_type(2, self.mouse_hex)
+            self.mouse = [new_x, new_y]
+
+    def is_mouse_victorious (self) -> bool:
+        """
+        Checks if the mouse has reached an edge hexagon and won the game.
+        """
+
+        row, col = self.mouse
+        return row == 0 or row == len(self.board) - 1 or col == 0 or col == len(self.board[0]) - 1
+
+    def render_victory_screen (self, message: str) -> None:
+        """
+        Renders the victory screen with the provided message.
+        """
+        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_img, (10, 10))
+
+        font = pg.font.Font(None, 70)
+        message_surface = font.render(message, True, self.text_color)
+        message_position = message_surface.get_rect(centerx=self.screen.get_width() // 2,
+                                                    centery=self.screen.get_height() // 2)
+        self.screen.blit(message_surface, message_position)
+        self.back_button.render()
