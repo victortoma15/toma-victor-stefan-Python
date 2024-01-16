@@ -187,17 +187,6 @@ class TrapTheMouse:
 
         exit()
 
-    def place_obstacles (self, matrix: list, count: int) -> list:
-        """
-        Places obstacles randomly on the board.
-        """
-        for _ in range(count):
-            x, y = random.randint(1, 13), random.randint(1, 13)
-            while matrix[x][y] == 3 or (x == 6 and y == 6):
-                x, y = random.randint(1, 13), random.randint(1, 13)
-            matrix[x][y] = 3
-        return matrix
-
     def render_main_menu (self) -> None:
         """
         Generates the main menu screen.
@@ -470,7 +459,7 @@ class TrapTheMouse:
                                 hex_found = True
                                 if hex_cell.hex_type == 1:
                                     self.game_state = 'game_over'
-                                    self.victory_message = "Victory! The mouse player has reached the edge!"
+                                    self.victory_message = "The mouse player won!"
                                     return game_state, True, game_difficulty, current_player
                         else:
                             if hex_cell.hex_type == 0:
@@ -481,7 +470,7 @@ class TrapTheMouse:
                     break
             if not self.find_available_moves():
                 self.game_state = 'game_over'
-                self.victory_message = "Victory! The mouse player has been trapped!"
+                self.victory_message = "The mouse-trapper won!"
                 return game_state, True, game_difficulty, current_player
             if hex_found:
                 if self.pvp_mode:
@@ -524,9 +513,9 @@ class TrapTheMouse:
         elif game_state == 'playing':
             self.render_game_board()
         elif game_state == 'game_over':
-            self.render_game_over_screen("Defeat! The mouse escaped!")
+            self.render_game_over_screen("You lost! The mouse escaped!")
         elif game_state == 'win_screen':
-            self.render_victory_screen("Victory! You trapped the mouse!")
+            self.render_victory_screen("You won! You trapped the mouse!")
 
     def reset_game (self):
         """
@@ -535,6 +524,7 @@ class TrapTheMouse:
         self.clear_and_setup_board()
         self.game_state = 'menu'
         self.victory = None
+        self.pvp_mode = False
 
     def render_game_over_screen (self, message):
         """
