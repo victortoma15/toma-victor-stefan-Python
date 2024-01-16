@@ -40,5 +40,38 @@ class Hexagon:
         """
         if self.hex_type != 1:
             self.hex_type = new_type
-            self.texture = pg.transform.scale(new_texture,(new_texture.get_width() * 1.2, new_texture.get_height() * 1.2))
+            self.texture = pg.transform.scale(new_texture,
+                                              (new_texture.get_width() * 1.2, new_texture.get_height() * 1.2))
             self.render()
+
+
+class GameButton:
+    def __init__ (self, x: int, y: int, scale: float, image: pg.Surface, display: pg.Surface) -> None:
+        """
+        Constructor for the GameButton class.
+        """
+        self.display = display
+        scaled_width = int(image.get_width() * scale)
+        scaled_height = int(image.get_height() * scale)
+        self.texture = pg.transform.scale(image, (scaled_width, scaled_height))
+        self.rect = self.texture.get_rect(topleft=(x, y))
+
+    def render (self) -> None:
+        """
+        Draws the button.
+        """
+        if self.texture is not None and self.rect is not None:
+            self.display.blit(self.texture, self.rect.topleft)
+
+
+def spawn_blocks (matrix: list, count: int) -> list:
+    """
+    Places a specified number of obstacles randomly on the board.
+    """
+    for _ in range(count):
+        x, y = random.randint(1, 10), random.randint(1, 10)
+        while matrix[x][y] == 3 or (x == 6 and y == 6):
+            x, y = random.randint(1, 10), random.randint(1, 10)
+        matrix[x][y] = 3
+
+    return matrix
