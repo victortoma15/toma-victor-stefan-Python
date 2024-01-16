@@ -241,3 +241,52 @@ class TrapTheMouse:
                 if self.board[r][c].hex_type != 3:
                     available_moves.append(index + 1)
         return available_moves
+
+    def move_mouse_easy_mode (self, available_moves: list) -> None:
+        """
+        Moves the mouse in an easy mode, choosing from available moves randomly.
+        """
+        row, col = self.mouse
+        self.board[row][col].update_type(0, self.free_hex)
+
+        if not available_moves:
+            self.game_state = 'game_over'
+            return
+
+        move = random.choice(available_moves)
+        move_mapping = {1: (-1, 0), 2: (-1, -1), 3: (0, 1), 4: (1, -1), 5: (1, 0), 6: (0, -1)}
+        move_row, move_col = move_mapping[move]
+
+        new_row, new_col = row + move_row, col + move_col
+        self.mouse = [new_row, new_col]
+        self.board[new_row][new_col].update_type(2, self.mouse_hex)
+
+    def move_mouse_medium_mode (self, available_moves: list) -> None:
+        """
+        Moves the mouse in a medium mode, choosing from available moves randomly but with a higher probability to move towards the edge.
+        """
+        row, col = self.mouse
+        self.board[row][col].update_type(0, self.free_hex)
+
+        if not available_moves:
+            self.game_state = 'game_over'
+            return
+
+        move_mapping = {1: (-1, 0), 2: (-1, -1), 3: (0, 1), 4: (1, -1), 5: (1, 0), 6: (0, -1)}
+        edge_moves = []
+
+        for move in available_moves:
+            move_row, move_col = move_mapping[move]
+            new_row, new_col = row + move_row, col + move_col
+            if new_row == 0 or new_row == len(self.board) - 1 or new_col == 0 or new_col == len(self.board[0]) - 1:
+                edge_moves.append(move)
+
+        if edge_moves:
+            move = random.choice(edge_moves)
+        else:
+            move = random.choice(available_moves)
+
+        move_row, move_col = move_mapping[move]
+        new_row, new_col = row + move_row, col + move_col
+        self.mouse = [new_row, new_col]
+        self.board[new_row][new_col].update_type(2, self.mouse_hex)
